@@ -1,5 +1,6 @@
 package otus.homework.flowcats
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 
@@ -10,8 +11,17 @@ class CatsRepository(
 
     fun listenForCatFacts() = flow {
         while (true) {
-            val latestNews = catsService.getCatFact()
-            emit(latestNews)
+            try {
+                val latestNews = catsService.getCatFact()
+                emit(Result.Success(latestNews))
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                // так как сервис не доступен, я хз почему приложение по задумке должно было крашится,
+                // но у меня оно крашилось из-за 503 от сервера
+                emit(Result.Error)
+            }
+
             delay(refreshIntervalMs)
         }
     }
